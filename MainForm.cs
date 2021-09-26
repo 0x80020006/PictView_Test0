@@ -55,6 +55,7 @@ namespace PictView_Test0
             //アプリケーションのロード処理
             //実行時の処理は以下で行う
             Load += new EventHandler(MainForm_Load);
+            KeyDown += new KeyEventHandler(MainForm_KeyDown);
             Controls.Add(menuStrip);
             Controls.Add(pictMain);
             pictMain.Dock = DockStyle.Fill;
@@ -130,6 +131,60 @@ namespace PictView_Test0
 
             Console.WriteLine("開く処理終了");
 
+        }
+
+        private void MainForm_Action()
+        {
+            if (loadFileNum >= filesList.Count)
+            {
+                loadFileNum = 0;
+            }
+            else if (loadFileNum < 0)
+            {
+                loadFileNum = filesList.Count - 1;
+            }
+
+            //「loadFileNo」のファイルを描画する
+            if (File.Exists(filesList[loadFileNum]))
+            {
+                LoadImage();
+            }
+        }
+
+        //キーボードが押されたときの処理
+        private void MainForm_KeyDown(object sender, KeyEventArgs e)
+        {
+            var k = e.KeyCode;
+            Console.WriteLine($"{k}");
+
+            //ファイルが読み込まれいる場合
+            if (Flags.fileFlag.HasFlag(Flags.fileFlags.FILE_LOAD))
+            {
+
+                switch (k)
+                {
+                case Keys.Up:
+                    loadFileNum -= 1;
+                    break;
+
+                case Keys.Down:
+                    loadFileNum += 1;
+                    break;
+
+                case Keys.Left:
+                    loadFileNum -= 1;
+                    break;
+
+                case Keys.Right:
+                    loadFileNum += 1;
+                    break;
+
+                default:
+                    break;
+                }
+
+                MainForm_Action();
+            }
         }
 
         //画像読み込み
