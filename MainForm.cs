@@ -23,14 +23,21 @@ namespace PictView_Test0
         MenuStrip menuStrip;
         OpenFileDialog ofd;
 
+        //画像表示
+        PictureBox pictMain;
+
         static readonly int MS_WIDTH  = 500;
         static readonly int MS_HEIGHT = 470;
         static readonly int CS_WIDTH  = 800;
         static readonly int CS_HEIGHT = 770;
 
+        Bitmap imgScreen = new Bitmap(CS_WIDTH, CS_HEIGHT);
 
         public MainForm()
         {
+            //アプリケーションタイトル
+            Text = "PictView";
+
             //メニューバー表示
             menuStrip = new MenuStrip();
 
@@ -40,16 +47,25 @@ namespace PictView_Test0
             //クライアント起動時サイズ
             Size = new Size(CS_WIDTH, CS_HEIGHT);
 
+            //画像表示枠
+            pictMain = new PictureBox();
+            pictMain.Location = new Point(0, 25);
+            pictMain.BackColor = Color.Blue;
+
             //アプリケーションのロード処理
             //実行時の処理は以下で行う
             Load += new EventHandler(MainForm_Load);
             Controls.Add(menuStrip);
-
+            Controls.Add(pictMain);
+            pictMain.Dock = DockStyle.Fill;
         }
 
         //メニューバー
         private void MainForm_Load(object sender, EventArgs e)
         {
+            //ウィンドウサイズが変更されたときに呼び出す
+            SizeChanged += Window_SizeChanged;
+
             //フラグの初期化
             Flags.fileFlag = 0;
             Console.WriteLine($"フラグ：{Flags.fileFlag}");
@@ -109,12 +125,67 @@ namespace PictView_Test0
                 Console.WriteLine($"{Flags.fileFlag}");
 
                 //「画像読み込み」の実行
-                //LoadImage();                
+                LoadImage();                
             }
 
             Console.WriteLine("開く処理終了");
 
         }
+
+        //画像読み込み
+        private void LoadImage()
+        {
+
+            //画像が読み込まれていた場合
+            if (pictMain.Image != null)
+            {
+                //リソースを解放する
+                pictMain.Image.Dispose();
+                //pictureBox[pictFrame]の中を空にする
+                pictMain.Image = null;
+
+            }
+
+            //読み込む画像
+            openFilePath = filesList[loadFileNum];
+            Console.WriteLine($"{loadFileNum},{openFilePath}");
+
+            imgScreen = new Bitmap(Width, Height);
+            var g = Graphics.FromImage(imgScreen);
+            Image img = Image.FromFile(openFilePath);
+
+            //画像サイズ
+            float imgWidth = img.Width;
+            float imgHeight = img.Height;
+
+            //描画枠と画像の比率
+            float rWidth = Width / imgWidth;
+            float rHeight = Height / imgHeight;
+            float r = Math.Min(rWidth, rHeight);
+
+            g.DrawImage(img, Width / 2 - imgWidth * r / 2, Height / 2 - imgHeight * r /2, img.Width * r, img.Height * r);
+            pictMain.Image = imgScreen;
+
+            img.Dispose();
+            g.Dispose();
+
+            //読み込んだファイル名を表示
+            string Title = "PictViewer - ";
+            Title += openFilePath;
+            Text = Title;
+
+        }
+
+        private void Window_SizeChanged(object sender, EventArgs e)
+        {
+            if(Flags.fileFlag.HasFlag(Flags.fileFlags.FILE_LOAD))
+            {
+                LoadImage();
+
+                Console.WriteLine($"画像表示処理[Window_SizeChanged]");
+            }
+        }
+
 
         //終了時のメモリ解放
         private IContainer components = null;
